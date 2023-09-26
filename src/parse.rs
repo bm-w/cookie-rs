@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::error::Error;
-use std::convert::{From, TryFrom};
+#[cfg(feature = "time")]
+use std::convert::TryFrom;
 use std::str::Utf8Error;
 use std::fmt;
 
@@ -9,16 +10,23 @@ use std::ascii::AsciiExt;
 
 #[cfg(feature = "percent-encode")]
 use percent_encoding::percent_decode;
+#[cfg(feature = "time")]
 use time::{parsing::Parsable, macros::format_description, format_description::FormatItem};
 
-use crate::{Cookie, SameSite, CookieStr, max_age, expiration};
+use crate::{Cookie, SameSite, CookieStr, max_age};
+#[cfg(feature = "time")] 
+use crate::expiration;
 
 // The three formats spec'd in http://tools.ietf.org/html/rfc2616#section-3.3.1.
 // Additional ones as encountered in the real world.
-pub static FMT1: &[FormatItem<'_>] = format_description!("[weekday repr:short], [day] [month repr:short] [year padding:none] [hour]:[minute]:[second] GMT");
-pub static FMT2: &[FormatItem<'_>] = format_description!("[weekday], [day]-[month repr:short]-[year repr:last_two] [hour]:[minute]:[second] GMT");
-pub static FMT3: &[FormatItem<'_>] = format_description!("[weekday repr:short] [month repr:short] [day padding:space] [hour]:[minute]:[second] [year padding:none]");
-pub static FMT4: &[FormatItem<'_>] = format_description!("[weekday repr:short], [day]-[month repr:short]-[year padding:none] [hour]:[minute]:[second] GMT");
+#[cfg(feature = "time")]
+pub(crate) static FMT1: &[FormatItem<'_>] = format_description!("[weekday repr:short], [day] [month repr:short] [year padding:none] [hour]:[minute]:[second] GMT");
+#[cfg(feature = "time")]
+pub(crate) static FMT2: &[FormatItem<'_>] = format_description!("[weekday], [day]-[month repr:short]-[year repr:last_two] [hour]:[minute]:[second] GMT");
+#[cfg(feature = "time")]
+pub(crate) static FMT3: &[FormatItem<'_>] = format_description!("[weekday repr:short] [month repr:short] [day padding:space] [hour]:[minute]:[second] [year padding:none]");
+#[cfg(feature = "time")]
+pub(crate) static FMT4: &[FormatItem<'_>] = format_description!("[weekday repr:short], [day]-[month repr:short]-[year padding:none] [hour]:[minute]:[second] GMT");
 
 /// Enum corresponding to a parsing error.
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
@@ -141,6 +149,7 @@ fn parse_inner<'c>(s: &str, decode: bool) -> Result<Cookie<'c>, ParseError> {
     let mut cookie: Cookie<'c> = Cookie {
         name, value,
         cookie_string: None,
+        #[cfg(feature = "time")]
         expires: None,
         max_age: None,
         domain: None,
@@ -200,6 +209,7 @@ fn parse_inner<'c>(s: &str, decode: bool) -> Result<Cookie<'c>, ParseError> {
                     // http://httpwg.org/http-extensions/draft-ietf-httpbis-cookie-same-site.html.
                 }
             }
+            #[cfg(feature = "time")]
             ("expires", Some(v)) => {
                 let tm = parse_date(v, &FMT1)
                     .or_else(|_| parse_date(v, &FMT2))
@@ -232,6 +242,7 @@ pub(crate) fn parse_cookie<'c, S>(cow: S, decode: bool) -> Result<Cookie<'c>, Pa
     Ok(cookie)
 }
 
+#[cfg(feature = "time")]
 pub(crate) fn parse_date(s: &str, format: &impl Parsable) -> Result<expiration::DateTime, time::Error> {
     // Parse. Handle "abbreviated" dates like Chromium. See cookie#162.
     let mut date = format.parse(s.as_bytes())?;
@@ -250,8 +261,9 @@ pub(crate) fn parse_date(s: &str, format: &impl Parsable) -> Result<expiration::
 
 #[cfg(test)]
 mod tests {
-    use super::parse_date;
     use crate::{Cookie, SameSite, max_age::Duration};
+    #[cfg(feature = "time")]
+    use super::parse_date;
 
     macro_rules! assert_eq_parse {
         ($string:expr, $expected:expr) => (
@@ -428,20 +440,24 @@ mod tests {
         assert_ne_parse!(" foo=bar ;HttpOnly; Secure; Max-Age=4; Path=/foo; \
             Domain=FOO.COM", unexpected);
 
-        let time_str = "Wed, 21 Oct 2015 07:28:00 GMT";
-        let expires = parse_date(time_str, &super::FMT1).unwrap();
-        expected.set_expires(expires);
-        assert_eq_parse!(" foo=bar ;HttpOnly; Secure; Max-Age=4; Path=/foo; \
-            Domain=foo.com; Expires=Wed, 21 Oct 2015 07:28:00 GMT", expected);
+        #[cfg(feature = "time")]
+        {
+            let time_str = "Wed, 21 Oct 2015 07:28:00 GMT";
+            let expires = parse_date(time_str, &super::FMT1).unwrap();
+            expected.set_expires(expires);
+            assert_eq_parse!(" foo=bar ;HttpOnly; Secure; Max-Age=4; Path=/foo; \
+                Domain=foo.com; Expires=Wed, 21 Oct 2015 07:28:00 GMT", expected);
 
-        unexpected.set_domain("foo.com");
-        let bad_expires = parse_date(time_str, &super::FMT1).unwrap();
-        expected.set_expires(bad_expires);
-        assert_ne_parse!(" foo=bar ;HttpOnly; Secure; Max-Age=4; Path=/foo; \
-            Domain=foo.com; Expires=Wed, 21 Oct 2015 07:28:00 GMT", unexpected);
+            unexpected.set_domain("foo.com");
+            let bad_expires = parse_date(time_str, &super::FMT1).unwrap();
+            expected.set_expires(bad_expires);
+            assert_ne_parse!(" foo=bar ;HttpOnly; Secure; Max-Age=4; Path=/foo; \
+                Domain=foo.com; Expires=Wed, 21 Oct 2015 07:28:00 GMT", unexpected);
+        }
     }
 
     #[test]
+    #[cfg(feature = "time")]
     fn parse_abbreviated_years() {
         let cookie_str = "foo=bar; expires=Thu, 10-Sep-20 20:00:00 GMT";
         let cookie = Cookie::parse(cookie_str).unwrap();
@@ -465,6 +481,7 @@ mod tests {
     }
 
     #[test]
+    #[cfg(feature = "time")]
     fn parse_variant_date_fmts() {
         let cookie_str = "foo=bar; expires=Sun, 06 Nov 1994 08:49:37 GMT";
         Cookie::parse(cookie_str).unwrap().expires_datetime().unwrap();
@@ -524,6 +541,6 @@ mod tests {
             .max_age(Duration::from_secs(max_seconds))
             .finish();
         let too_many_seconds = (max_seconds as u64) + 1;
-        assert_eq_parse!(format!(" foo=bar; Max-Age={:?}", too_many_seconds), expected);
+        assert_eq_parse!(format!(" foo=bar; Max-Age={too_many_seconds}",), expected);
     }
 }

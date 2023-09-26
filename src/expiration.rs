@@ -169,7 +169,7 @@ impl DateTime {
     }
 
     /// TODO: Docs.
-    #[cfg(any(test, feature = "time"))]
+    #[cfg(feature = "time")]
     pub fn into_time(self) -> time::OffsetDateTime {
         self.into()
     }
