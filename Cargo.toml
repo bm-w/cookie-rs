@@ -19,6 +19,7 @@ secure = ["private", "signed", "key-expansion"]
 private = ["aes-gcm", "base64", "rand", "subtle"]
 signed = ["hmac", "sha2", "base64", "rand", "subtle"]
 key-expansion = ["sha2", "hkdf"]
+time = []
 
 [dependencies]
 time = { version = "0.3", default-features = false, features = ["std", "parsing", "formatting", "macros"] }

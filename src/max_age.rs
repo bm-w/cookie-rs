@@ -3,10 +3,6 @@
 //!
 //! [cma]: method@crate::Cookie::max_age
 
-use std::convert::TryInto;
-
-use time;
-
 /// A `Duration` type to represent a span of time for the [`Cookie::max_age`][cma] parameter. It
 /// is similar to [`std::time::Duration`], but only contains whole seconds, and provides some extra
 /// convenience methods such as [`from_mins`](Duration::from_mins()) and
@@ -80,8 +76,10 @@ impl From<u32> for Duration {
     }
 }
 
+#[cfg(any(test, feature = "time"))]
 impl From<time::Duration> for Duration {
     fn from(value: time::Duration) -> Self {
+        use std::convert::TryInto as _;
         let seconds = value.whole_seconds();
         Self(seconds.try_into().unwrap_or_else(|_| if seconds < 0 { 0 } else { u32::MAX }))
     }
@@ -94,6 +92,7 @@ impl std::ops::Sub<Duration> for time::OffsetDateTime {
     }
 }
 
+#[cfg(any(test, feature = "time"))]
 impl std::ops::Add<Duration> for time::OffsetDateTime {
     type Output = time::OffsetDateTime;
     fn add(self, rhs: Duration) -> Self::Output {

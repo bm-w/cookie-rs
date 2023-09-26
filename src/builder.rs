@@ -58,12 +58,11 @@ impl<'c> CookieBuilder<'c> {
     ///
     /// ```rust
     /// # extern crate cookie;
-    /// use cookie::{Cookie, Expiration};
-    /// use cookie::time::OffsetDateTime;
+    /// use cookie::{Cookie, Expiration, expiration::DateTime};
     ///
     /// # fn main() {
     /// let c = Cookie::build("foo", "bar")
-    ///     .expires(OffsetDateTime::now_utc())
+    ///     .expires(DateTime::now())
     ///     .finish();
     ///
     /// assert!(c.expires().is_some());
