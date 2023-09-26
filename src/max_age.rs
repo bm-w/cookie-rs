@@ -15,7 +15,12 @@
 /// [httpwg]: https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-max-age-attribute
 /// [chrome]: https://developer.chrome.com/blog/cookie-max-age-expires/
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Duration(pub(crate) time::Duration);
+pub struct Duration(
+    #[cfg(not(feature = "time"))]
+    std::time::Duration,
+    #[cfg(feature = "time")]
+    time::Duration,
+);
 
 macro_rules! clamp {
     ( $seconds:expr ) => { {
@@ -29,15 +34,28 @@ macro_rules! clamp {
 impl Duration {
 
     /// A duration of zero time.
-    pub const ZERO: Self = Self(time::Duration::ZERO);
+    pub const ZERO: Self = Self(
+        #[cfg(not(feature = "time"))]
+        std::time::Duration::ZERO,
+        #[cfg(feature = "time")]
+        time::Duration::ZERO,
+    );
 
     /// The maximum duration, `u32::MAX` seconds.
-    pub const MAX: Self = Self(time::Duration::seconds(u32::MAX as _));
+    pub const MAX: Self = Self(
+        #[cfg(not(feature = "time"))]
+        std::time::Duration::from_secs(u32::MAX as _),
+        #[cfg(feature = "time")]
+        time::Duration::seconds(u32::MAX as _),
+    );
 
     /// Creates a new `Duration` from the specified number of whole seconds, clamped to
     /// `0..=u32::MAX`.
     pub const fn from_secs(seconds: u32) -> Self {
-        Self(time::Duration::seconds(seconds as _))
+        #[cfg(not(feature = "time"))]
+        { Self(std::time::Duration::from_secs(seconds as _)) }
+        #[cfg(feature = "time")]
+        { Self(time::Duration::seconds(seconds as _)) }
     }
 
     /// Creates a new `Duration` from the specified number of whole minutes.
@@ -58,7 +76,10 @@ impl Duration {
 
     /// Returns the number of _whole_ seconds contained by this `Duration`.
     pub const fn as_secs(&self) -> u32 {
-        clamp!(self.0.whole_seconds())
+        #[cfg(not(feature = "time"))]
+        { clamp!(self.0.as_secs()) }
+        #[cfg(feature = "time")]
+        { clamp!(self.0.whole_seconds()) }
     }
 
     /// Returns the number of _whole_ minutes contained by this `Duration`.
@@ -79,10 +100,14 @@ impl Duration {
 
     /// Returns the equivalent [`std::time::Duration`].
     pub const fn as_std(self) -> std::time::Duration {
-        if self.0.is_negative() { std::time::Duration::ZERO } else { self.0.unsigned_abs() }
+        #[cfg(not(feature = "time"))]
+        { self.0 }
+        #[cfg(feature = "time")]
+        { if self.0.is_negative() { std::time::Duration::ZERO } else { self.0.unsigned_abs() } }
     }
 
     /// Returns the equivalent [`time::Duration`].
+    #[cfg(feature = "time")]
     pub const fn as_time(self) -> time::Duration {
         self.0
     }
@@ -111,14 +136,20 @@ impl From<time::Duration> for Duration {
 impl std::ops::Add<Duration> for Duration {
     type Output = Duration;
     fn add(self, rhs: Duration) -> Self::Output {
-        Self::from_secs(clamp!((self.0 + rhs.0).whole_seconds()))
+        #[cfg(not(feature = "time"))]
+        { Self::from_secs(clamp!((self.0 + rhs.0).as_secs())) }
+        #[cfg(feature = "time")]
+        { Self::from_secs(clamp!((self.0 + rhs.0).whole_seconds())) }
     }
 }
 
 impl std::ops::Sub<Duration> for Duration {
     type Output = Duration;
     fn sub(self, rhs: Duration) -> Self::Output {
-        Self::from_secs(clamp!((self.0 - rhs.0).whole_seconds()))
+        #[cfg(not(feature = "time"))]
+        { Self::from_secs(clamp!((self.0 - rhs.0).as_secs())) }
+        #[cfg(feature = "time")]
+        { Self::from_secs(clamp!((self.0 - rhs.0).whole_seconds())) }
     }
 }
 

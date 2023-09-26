@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 
-use crate::{Cookie, Expiration, SameSite, max_age};
+use crate::{Cookie, SameSite, max_age};
+#[cfg(feature = "time")]
+use crate::Expiration;
 
 /// Structure that follows the builder pattern for building `Cookie` structs.
 ///
@@ -76,6 +78,7 @@ impl<'c> CookieBuilder<'c> {
     /// # }
     /// ```
     #[inline]
+    #[cfg(feature = "time")]
     pub fn expires<E: Into<Expiration>>(mut self, when: E) -> Self {
         self.cookie.set_expires(when);
         self
@@ -211,6 +214,7 @@ impl<'c> CookieBuilder<'c> {
     ///     .finish();
     ///
     /// assert_eq!(c.max_age(), Some(Duration::from_naive_days(365 * 20)));
+    /// # #[cfg(feature = "time")]
     /// # assert!(c.expires().is_some());
     /// # }
     /// ```
