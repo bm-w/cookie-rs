@@ -1,6 +1,6 @@
 use std::borrow::Cow;
 
-use crate::{Cookie, SameSite, Expiration, max_age};
+use crate::{Cookie, Expiration, SameSite, max_age};
 
 /// Structure that follows the builder pattern for building `Cookie` structs.
 ///
@@ -59,7 +59,7 @@ impl<'c> CookieBuilder<'c> {
     /// ```rust
     /// # extern crate cookie;
     /// use cookie::{Cookie, Expiration};
-    /// use cookie::time::OffsetDateTime;
+    /// use time::OffsetDateTime;
     ///
     /// # fn main() {
     /// let c = Cookie::build("foo", "bar")

@@ -15,9 +15,7 @@
 /// [httpwg]: https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-max-age-attribute
 /// [chrome]: https://developer.chrome.com/blog/cookie-max-age-expires/
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
-pub struct Duration(
-    time::Duration,
-);
+pub struct Duration(pub(crate) time::Duration);
 
 macro_rules! clamp {
     ( $seconds:expr ) => { {
@@ -103,6 +101,7 @@ impl From<std::time::Duration> for Duration {
     }
 }
 
+#[cfg(feature = "time")]
 impl From<time::Duration> for Duration {
     fn from(value: time::Duration) -> Self {
         Self::from_secs(clamp!(value.whole_seconds()))
@@ -123,6 +122,7 @@ impl std::ops::Sub<Duration> for Duration {
     }
 }
 
+#[cfg(feature = "time")]
 impl std::ops::Add<Duration> for time::OffsetDateTime {
     type Output = time::OffsetDateTime;
     fn add(self, rhs: Duration) -> Self::Output {
@@ -130,6 +130,7 @@ impl std::ops::Add<Duration> for time::OffsetDateTime {
     }
 }
 
+#[cfg(feature = "time")]
 impl std::ops::Sub<Duration> for time::OffsetDateTime {
     type Output = time::OffsetDateTime;
     fn sub(self, rhs: Duration) -> Self::Output {
