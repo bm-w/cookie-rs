@@ -1,13 +1,8 @@
 use std::borrow::Cow;
 
-use crate::{Cookie, SameSite};
+use crate::{Cookie, SameSite, max_age};
 #[cfg(any(feature = "time", feature = "chrono"))]
 use crate::Expiration;
-
-#[cfg(feature = "time")]
-use time::Duration;
-#[cfg(feature = "chrono")]
-use chrono::Duration;
 
 /// Structure that follows the builder pattern for building `Cookie` structs.
 ///
@@ -19,11 +14,9 @@ use chrono::Duration;
 ///
 /// # Example
 ///
-#[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
-#[cfg_attr(feature = "time", doc = "```rust")]
+/// ```rust
 /// # extern crate cookie;
-/// use cookie::Cookie;
-/// use cookie::time::Duration;
+/// use cookie::{Cookie, max_age::Duration};
 ///
 /// # fn main() {
 /// let cookie: Cookie = Cookie::build("name", "value")
@@ -31,7 +24,7 @@ use chrono::Duration;
 ///     .path("/")
 ///     .secure(true)
 ///     .http_only(true)
-///     .max_age(Duration::days(1))
+///     .max_age(Duration::from_naive_days(1))
 ///     .finish();
 /// # }
 /// ```
@@ -65,15 +58,13 @@ impl<'c> CookieBuilder<'c> {
     ///
     /// # Example
     ///
-    #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
-    #[cfg_attr(feature = "time", doc = "```rust")]
+    /// ```rust
     /// # extern crate cookie;
-    /// use cookie::{Cookie, Expiration};
-    /// use cookie::time::OffsetDateTime;
+    /// use cookie::{Cookie, Expiration, expiration::DateTime};
     ///
     /// # fn main() {
     /// let c = Cookie::build("foo", "bar")
-    ///     .expires(OffsetDateTime::now_utc())
+    ///     .expires(DateTime::now())
     ///     .finish();
     ///
     /// assert!(c.expires().is_some());
@@ -96,23 +87,20 @@ impl<'c> CookieBuilder<'c> {
     ///
     /// # Example
     ///
-    #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
-    #[cfg_attr(feature = "time", doc = "```rust")]
+    /// ```rust"
     /// # extern crate cookie;
-    /// use cookie::Cookie;
-    /// use cookie::time::Duration;
+    /// use cookie::{Cookie, max_age::Duration};
     ///
     /// # fn main() {
     /// let c = Cookie::build("foo", "bar")
-    ///     .max_age(Duration::minutes(30))
+    ///     .max_age(Duration::from_mins(30))
     ///     .finish();
     ///
-    /// assert_eq!(c.max_age(), Some(Duration::seconds(30 * 60)));
+    /// assert_eq!(c.max_age(), Some(Duration::from_secs(30 * 60)));
     /// # }
     /// ```
     #[inline]
-    #[cfg(any(feature = "time", feature = "chrono"))]
-    pub fn max_age(mut self, value: Duration) -> Self {
+    pub fn max_age(mut self, value: max_age::Duration) -> Self {
         self.cookie.set_max_age(value);
         self
     }
@@ -215,18 +203,17 @@ impl<'c> CookieBuilder<'c> {
     ///
     /// # Example
     ///
-    #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
-    #[cfg_attr(feature = "time", doc = "```rust")]
+    /// ```rust
     /// # extern crate cookie;
-    /// use cookie::Cookie;
-    /// use cookie::time::Duration;
+    /// use cookie::{Cookie, max_age::Duration};
     ///
     /// # fn main() {
     /// let c = Cookie::build("foo", "bar")
     ///     .permanent()
     ///     .finish();
     ///
-    /// assert_eq!(c.max_age(), Some(Duration::days(365 * 20)));
+    /// assert_eq!(c.max_age(), Some(Duration::from_naive_days(365 * 20)));
+    /// # #[cfg(feature = "time")]
     /// # assert!(c.expires().is_some());
     /// # }
     /// ```

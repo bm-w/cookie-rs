@@ -30,8 +30,9 @@ use crate::Cookie;
 /// [remove](#method.remove). Finally, cookies can be looked up via
 /// [get](#method.get):
 ///
-#[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
-#[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+// #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
+// #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+/// ```rust
 /// # use cookie::{Cookie, CookieJar};
 /// let mut jar = CookieJar::new();
 /// jar.add(Cookie::new("a", "one"));
@@ -58,8 +59,9 @@ use crate::Cookie;
 /// Deltas are typically used to create `Set-Cookie` headers corresponding to
 /// the changes made to a cookie jar over a period of time.
 ///
-#[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
-#[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+// #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
+// #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+/// ```rust
 /// # use cookie::{Cookie, CookieJar};
 /// let mut jar = CookieJar::new();
 ///
@@ -186,11 +188,11 @@ impl CookieJar {
     ///
     /// Removing an _original_ cookie results in a _removal_ cookie:
     ///
-    #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
-    #[cfg_attr(feature = "time", doc = "```rust")]
+    // #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
+    // #[cfg_attr(feature = "time", doc = "```rust")]
+    /// ```rust
     /// # extern crate cookie;
-    /// use cookie::{CookieJar, Cookie};
-    /// use cookie::time::Duration;
+    /// use cookie::{CookieJar, Cookie, max_age::Duration};
     ///
     /// # fn main() {
     /// let mut jar = CookieJar::new();
@@ -205,7 +207,7 @@ impl CookieJar {
     /// let delta: Vec<_> = jar.delta().collect();
     /// assert_eq!(delta.len(), 1);
     /// assert_eq!(delta[0].name(), "name");
-    /// assert_eq!(delta[0].max_age(), Some(Duration::seconds(0)));
+    /// assert_eq!(delta[0].max_age(), Some(Duration::from_secs(0)));
     /// # }
     /// ```
     ///
@@ -229,7 +231,6 @@ impl CookieJar {
     /// jar.remove(Cookie::named("name"));
     /// assert_eq!(jar.delta().count(), 1);
     /// ```
-    #[cfg(any(feature = "time", feature = "chrono"))]
     pub fn remove(&mut self, mut cookie: Cookie<'static>) {
         if self.original_cookies.contains(cookie.name()) {
             cookie.make_removal();
@@ -248,11 +249,11 @@ impl CookieJar {
     ///
     /// Removing an _original_ cookie; no _removal_ cookie is generated:
     ///
-    #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
-    #[cfg_attr(feature = "time", doc = "```rust")]
+    // #[cfg_attr(not(feature = "time"), doc = "```rust,ignore")]
+    // #[cfg_attr(feature = "time", doc = "```rust")]
+    /// ```rust
     /// # extern crate cookie;
     /// use cookie::{CookieJar, Cookie};
-    /// use cookie::time::Duration;
     ///
     /// # fn main() {
     /// let mut jar = CookieJar::new();
@@ -286,8 +287,7 @@ impl CookieJar {
     ///
     /// # Example
     ///
-    #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
-    #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+    /// ```rust
     /// use cookie::{CookieJar, Cookie};
     ///
     /// let mut jar = CookieJar::new();
@@ -323,8 +323,7 @@ impl CookieJar {
     ///
     /// # Example
     ///
-    #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
-    #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+    /// ```rust
     /// use cookie::{CookieJar, Cookie};
     ///
     /// let mut jar = CookieJar::new();
@@ -351,8 +350,7 @@ impl CookieJar {
     ///
     /// # Example
     ///
-    #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
-    #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
+    /// ```rust
     /// use cookie::{CookieJar, Cookie};
     ///
     /// let mut jar = CookieJar::new();
@@ -624,10 +622,7 @@ mod test {
     #[cfg(any(feature = "time", feature = "chrono"))]
     fn delta() {
         use std::collections::HashMap;
-        #[cfg(feature = "time")]
-        use time::Duration;
-        #[cfg(feature = "chrono")]
-        use chrono::Duration;
+        use crate::max_age::Duration;
 
         let mut c = CookieJar::new();
 
@@ -651,7 +646,7 @@ mod test {
         assert!(names.get("test2").unwrap().is_none());
         assert!(names.get("test3").unwrap().is_none());
         assert!(names.get("test4").unwrap().is_none());
-        assert_eq!(names.get("original").unwrap(), &Some(Duration::seconds(0)));
+        assert_eq!(names.get("original").unwrap(), &Some(Duration::from_secs(0)));
     }
 
     #[test]
