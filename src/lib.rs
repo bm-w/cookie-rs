@@ -67,7 +67,7 @@
 //!   [`Duration`](crate::max_age::Duration) and 
 //!   [`DateTime`](crate::expiration::DateTime).
 //!
-//! * **`time`**
+//! * **`chrono`**
 //!
 //!   Enables a number of conversions from types from the `chrono` crate to
 //!   [`Duration`](crate::max_age::Duration) and
@@ -91,6 +91,7 @@ mod jar;
 mod delta;
 mod draft;
 #[cfg(any(feature = "time", feature = "chrono"))]
+#[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
 pub mod expiration;
 pub mod max_age;
 
@@ -110,6 +111,7 @@ pub use crate::builder::CookieBuilder;
 pub use crate::jar::{CookieJar, Delta, Iter};
 pub use crate::draft::*;
 #[cfg(any(feature = "time", feature = "chrono"))]
+#[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
 pub use crate::expiration::Expiration;
 
 #[derive(Debug, Clone)]
@@ -658,8 +660,7 @@ impl<'c> Cookie<'c> {
     ///
     /// # Example
     ///
-    #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```rust,ignore")]
-    #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```rust")]
+    /// ```
     /// use cookie::{Cookie, Expiration};
     ///
     /// let c = Cookie::parse("name=value").unwrap();
@@ -677,6 +678,7 @@ impl<'c> Cookie<'c> {
     /// assert_eq!(c.expires().and_then(|e| e.datetime()).map(|t| t.into_time().year()), Some(2017));
     /// ```
     #[cfg(any(feature = "time", feature = "chrono"))]
+    #[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
     #[inline]
     pub fn expires(&self) -> Option<Expiration> {
         self.expires
@@ -686,7 +688,7 @@ impl<'c> Cookie<'c> {
     ///
     /// # Example
     ///
-    /// ```rust
+    /// ```
     /// use cookie::Cookie;
     ///
     /// let c = Cookie::parse("name=value").unwrap();
@@ -704,6 +706,7 @@ impl<'c> Cookie<'c> {
     /// assert_eq!(c.expires_datetime().map(|t| t.into_time().year()), Some(2017));
     /// ```
     #[cfg(any(feature = "time", feature = "chrono"))]
+    #[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
     #[inline]
     pub fn expires_datetime(&self) -> Option<expiration::DateTime> {
         self.expires.and_then(|e| e.datetime())
@@ -936,8 +939,7 @@ impl<'c> Cookie<'c> {
     ///
     /// # Example
     ///
-    #[cfg_attr(not(any(feature = "time", feature = "chrono")), doc = "```ignore")]
-    #[cfg_attr(any(feature = "time", feature = "chrono"), doc = "```")]
+    /// ```
     /// # extern crate cookie;
     /// use cookie::{Cookie, Expiration, expiration::{DateTime, Duration}};
     ///
@@ -954,6 +956,7 @@ impl<'c> Cookie<'c> {
     /// assert_eq!(c.expires(), Some(Expiration::Session));
     /// ```
     #[cfg(any(feature = "time", feature = "chrono"))]
+    #[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
     pub fn set_expires<T: Into<Expiration>>(&mut self, time: T) {
         // RFC 6265 requires dates not to exceed 9999 years.
         self.expires = Some(time.into()
@@ -977,6 +980,7 @@ impl<'c> Cookie<'c> {
     /// assert_eq!(c.expires(), None);
     /// ```
     #[cfg(any(feature = "time", feature = "chrono"))]
+    #[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
     pub fn unset_expires(&mut self) {
         self.expires = None;
     }
@@ -1508,8 +1512,6 @@ impl ChronoNaiveDateTimeExt for chrono::NaiveDateTime {
 #[cfg(test)]
 mod tests {
     use crate::{Cookie, SameSite, max_age};
-    #[cfg(feature = "time")]
-    use crate::expiration;
     #[cfg(any(feature = "time", feature = "chrono"))]
     use crate::parse::parse_date;
 
@@ -1584,6 +1586,8 @@ mod tests {
     #[ignore]
     #[cfg(feature = "time")]
     fn format_date_wraps() {
+        use crate::expiration;
+
         let expires = time::OffsetDateTime::UNIX_EPOCH + time::Duration::MAX;
         let expires = expiration::DateTime::from(expires);
         let cookie = Cookie::build("foo", "bar").expires(expires).finish();

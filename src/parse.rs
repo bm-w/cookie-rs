@@ -19,13 +19,12 @@ use crate::expiration;
 
 // The three formats spec'd in http://tools.ietf.org/html/rfc2616#section-3.3.1.
 // Additional ones as encountered in the real world.
-
 #[cfg(feature = "time")]
 pub(crate) static FMT1: &[FormatItem<'_>] = format_description!("[weekday repr:short], [day] [month repr:short] [year padding:none] [hour]:[minute]:[second] GMT");
 #[cfg(feature = "time")]
 pub(crate) static FMT2: &[FormatItem<'_>] = format_description!("[weekday], [day]-[month repr:short]-[year repr:last_two] [hour]:[minute]:[second] GMT");
 #[cfg(feature = "time")]
-pub static FMT3: &[FormatItem<'_>] = format_description!("[weekday repr:short] [month repr:short] [day padding:space] [hour]:[minute]:[second] [year padding:none]");
+pub(crate) static FMT3: &[FormatItem<'_>] = format_description!("[weekday repr:short] [month repr:short] [day padding:space] [hour]:[minute]:[second] [year padding:none]");
 #[cfg(feature = "time")]
 pub(crate) static FMT4: &[FormatItem<'_>] = format_description!("[weekday repr:short], [day]-[month repr:short]-[year padding:none] [hour]:[minute]:[second] GMT");
 
@@ -221,14 +220,11 @@ fn parse_inner<'c>(s: &str, decode: bool) -> Result<Cookie<'c>, ParseError> {
             }
             #[cfg(any(feature = "time", feature = "chrono"))]
             ("expires", Some(v)) => {
-                println!("EXPIRES!");
                 let tm = parse_date(v, &FMT1)
                     .or_else(|_| parse_date(v, &FMT2))
                     .or_else(|_| parse_date(v, &FMT3))
                     .or_else(|_| parse_date(v, &FMT4));
                     // .or_else(|_| parse_date(v, &FMT5));
-
-                println!("tm: {tm:?}");
 
                 if let Ok(time) = tm {
                     cookie.expires = Some(time.into())
@@ -546,7 +542,6 @@ mod tests {
     }
 
     #[test]
-    #[cfg(any(feature = "time", feature = "chrono"))]
     fn parse_very_large_max_ages() {
         let mut expected = Cookie::build("foo", "bar")
             .max_age(Duration::MAX)

@@ -10,7 +10,7 @@
 /// [`u32`] should be sufficient for cookies’ `Max-Age` parameter, since an [HTTP workgroup
 /// draft][httpwg] is proposing an upper limit of 400 days, which is currently implemented in
 /// [Chrome][chrome], and which received positive reactions from Firefox & Safari.
-/// 
+///
 /// [cma]: method@crate::Cookie::max_age
 /// [httpwg]: https://httpwg.org/http-extensions/draft-ietf-httpbis-rfc6265bis.html#name-the-max-age-attribute
 /// [chrome]: https://developer.chrome.com/blog/cookie-max-age-expires/
@@ -20,7 +20,7 @@
 /// [`seconds(…)`](chrono::Duration::seconds()) method not `const` either._
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Duration(
-    #[cfg(not(any(feature = "time")))]
+    #[cfg(not(feature = "time"))]
     std::time::Duration,
     #[cfg(feature = "time")]
     time::Duration,
@@ -165,6 +165,14 @@ impl From<time::Duration> for Duration {
 impl From<Duration> for time::Duration {
     fn from(value: Duration) -> Self {
         value.as_time()
+    }
+}
+
+#[cfg(feature = "chrono")]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "chrono")))]
+impl From<chrono::Duration> for Duration {
+    fn from(value: chrono::Duration) -> Self {
+        Self::from_chrono(value)
     }
 }
 

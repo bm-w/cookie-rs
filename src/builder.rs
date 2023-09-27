@@ -76,8 +76,9 @@ impl<'c> CookieBuilder<'c> {
     /// assert_eq!(c.expires(), Some(Expiration::Session));
     /// # }
     /// ```
-    #[inline]
     #[cfg(any(feature = "time", feature = "chrono"))]
+    #[cfg_attr(all(nightly, doc), doc(cfg(any(feature = "time", feature = "chrono"))))]
+    #[inline]
     pub fn expires<E: Into<Expiration>>(mut self, when: E) -> Self {
         self.cookie.set_expires(when);
         self
@@ -87,7 +88,7 @@ impl<'c> CookieBuilder<'c> {
     ///
     /// # Example
     ///
-    /// ```rust"
+    /// ```rust
     /// # extern crate cookie;
     /// use cookie::{Cookie, max_age::Duration};
     ///
@@ -217,7 +218,6 @@ impl<'c> CookieBuilder<'c> {
     /// # assert!(c.expires().is_some());
     /// # }
     /// ```
-    #[cfg(any(feature = "time", feature = "chrono"))]
     #[inline]
     pub fn permanent(mut self) -> Self {
         self.cookie.make_permanent();

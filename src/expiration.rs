@@ -222,13 +222,14 @@ impl DateTime {
     }
 
     /// Creates a new `DateTime` with the same date & time and timezone offset
-    /// as the [`OffsetDateTime`][todt], clamped to the range [`MIN`]…[`MAX`]
+    /// as the [`OffsetDateTime`][todt], clamped to the range
+    /// [`MIN`](DateTime::MIN)…[`MAX`](DateTime::MAX)
     /// (inclusive).
     ///
     /// The timezone offset will be preserved (unless clamped), and will be
     /// included in any [`OffsetDateTime`][todt] returned from calling
-    /// [`into_time`] on a `DateTime` created through `from_time`, but is
-    /// otherwise opaque.
+    /// [`into_time`](DateTime::into_time) on a `DateTime` created through
+    /// `from_time`, but is otherwise opaque.
     ///
     /// [todt]: time::OffsetDateTime
     #[cfg(feature = "time")]
@@ -296,7 +297,7 @@ impl DateTime {
     }
 }
 
-#[cfg(any(feature = "time"))]
+#[cfg(feature = "time")]
 #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl From<time::OffsetDateTime> for DateTime {
     /// See [`DateTime::from_time`].
@@ -305,7 +306,7 @@ impl From<time::OffsetDateTime> for DateTime {
     }
 }
 
-#[cfg(any(feature = "time"))]
+#[cfg(feature = "time")]
 #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl From<DateTime> for time::OffsetDateTime {
     /// See [`DateTime::into_time`].
