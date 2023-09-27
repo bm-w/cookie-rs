@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::error::Error;
 #[cfg(feature = "time")]
-use std::convert::TryFrom;
+use std::convert::TryFrom as _;
 use std::str::Utf8Error;
 use std::fmt;
 

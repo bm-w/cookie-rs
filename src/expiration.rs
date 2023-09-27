@@ -140,7 +140,7 @@ pub struct DateTime(pub(crate) time::OffsetDateTime);
 
 impl DateTime {
 
-    /// The upper bound of the valid `DateTime` range (the first instant of the
+    /// The lower bound of the valid `DateTime` range (the first instant of the
     /// UTC year 1,000).
     pub const MIN: Self = Self(time::macros::datetime!(1000-01-01 00:00:00.000_000 UTC));
 
@@ -158,7 +158,8 @@ impl DateTime {
         self.0.unix_timestamp()
     }
 
-    /// Formats the `DateTime` with the UTC offset.
+    /// Formats the `DateTime` with a UTC offset.
+    #[cfg(feature = "time")]
     pub(crate) fn format(&self, fmt: &[time::format_description::FormatItem<'_>])
     -> Result<String, time::error::Format> {
         self.0.to_offset(time::UtcOffset::UTC).format(fmt)
@@ -169,29 +170,30 @@ impl DateTime {
     }
 
     /// Creates a new `DateTime` with the same date & time and timezone offset
-    /// as the [`OffsetDateTime`][t], clamped to the range [`MIN`]…[`MAX`]
+    /// as the [`OffsetDateTime`][todt], clamped to the range
+    /// [`MIN`](DateTime::MIN)…[`MAX`](DateTime::MAX)
     /// (inclusive).
     ///
     /// The timezone offset will be preserved (unless clamped), and will be
-    /// included in any [`OffsetDateTime`][t] returned from calling
-    /// [`into_time`] on a `DateTime` created through `from_time`, but is
-    /// otherwise opaque.
+    /// included in any [`OffsetDateTime`][todt] returned from calling
+    /// [`into_time`](DateTime::into_time) on a `DateTime` created through
+    /// `from_time`, but is otherwise opaque.
     ///
-    /// [t]: time::OffsetDateTime
+    /// [todt]: time::OffsetDateTime
     #[cfg(feature = "time")]
     #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
     pub fn from_time(datetime: time::OffsetDateTime) -> Self {
         Self::_from_time(datetime)
     }
 
-    /// Returns the [`OffsetDateTime`][t] with the same date & time and
-    /// timezone offset as this `DateTime`,
+    /// Returns the [`OffsetDateTime`][todt] with the same date & time and
+    /// timezone offset as this `DateTime`.
     ///
-    /// If this `DateTime` was crated from an [`OffsetDateTime`][t] the
+    /// If this `DateTime` was created from an [`OffsetDateTime`][todt] the
     /// timezone offset will be preserved (unless it was clamped), otherwise
     /// it will be UTC.
     ///
-    /// [t]: time::OffsetDateTime
+    /// [todt]: time::OffsetDateTime
     #[cfg(feature = "time")]
     #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
     pub fn into_time(self) -> time::OffsetDateTime {

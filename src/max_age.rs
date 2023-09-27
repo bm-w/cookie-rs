@@ -106,8 +106,16 @@ impl Duration {
         { if self.0.is_negative() { std::time::Duration::ZERO } else { self.0.unsigned_abs() } }
     }
 
+    /// Creates a new `Duration` from the equivalent [`time::Duration`].
+    #[cfg(feature = "time")]
+    #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
+    pub const fn from_time(duration: time::Duration) -> Self {
+        Self::from_secs(clamp!(duration.whole_seconds()))
+    }
+
     /// Returns the equivalent [`time::Duration`].
     #[cfg(feature = "time")]
+    #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
     pub const fn as_time(self) -> time::Duration {
         self.0
     }
@@ -127,9 +135,18 @@ impl From<std::time::Duration> for Duration {
 }
 
 #[cfg(feature = "time")]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl From<time::Duration> for Duration {
     fn from(value: time::Duration) -> Self {
-        Self::from_secs(clamp!(value.whole_seconds()))
+        Self::from_time(value)
+    }
+}
+
+#[cfg(feature = "time")]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
+impl From<Duration> for time::Duration {
+    fn from(value: Duration) -> Self {
+        value.as_time()
     }
 }
 
@@ -154,6 +171,7 @@ impl std::ops::Sub<Duration> for Duration {
 }
 
 #[cfg(feature = "time")]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl std::ops::Add<Duration> for time::OffsetDateTime {
     type Output = time::OffsetDateTime;
     fn add(self, rhs: Duration) -> Self::Output {
@@ -162,6 +180,7 @@ impl std::ops::Add<Duration> for time::OffsetDateTime {
 }
 
 #[cfg(feature = "time")]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl std::ops::Sub<Duration> for time::OffsetDateTime {
     type Output = time::OffsetDateTime;
     fn sub(self, rhs: Duration) -> Self::Output {

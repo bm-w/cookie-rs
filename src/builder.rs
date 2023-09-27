@@ -76,8 +76,9 @@ impl<'c> CookieBuilder<'c> {
     /// assert_eq!(c.expires(), Some(Expiration::Session));
     /// # }
     /// ```
-    #[inline]
     #[cfg(feature = "time")]
+    #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
+    #[inline]
     pub fn expires<E: Into<Expiration>>(mut self, when: E) -> Self {
         self.cookie.set_expires(when);
         self
