@@ -133,21 +133,27 @@ impl<T: Into<Option<DateTime>>> From<T> for Expiration {
     }
 }
 
-/// TODO: Docs. (UTC).
+/// A cookie’s combined expiration date & time, kept within the range of
+/// 4-digit years (the year range 1,000…9,999, inclusive).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub struct DateTime(pub(crate) time::OffsetDateTime);
 
 impl DateTime {
 
-    /// TODO: Docs. (UTC).
+    /// The upper bound of the valid `DateTime` range (the first instant of the
+    /// UTC year 1,000).
+    pub const MIN: Self = Self(time::macros::datetime!(1000-01-01 00:00:00.000_000 UTC));
+
+    /// The upper bound of the valid `DateTime` range (one microsecond before
+    /// the UTC year 10,000).
     pub const MAX: Self = Self(time::macros::datetime!(9999-12-31 23:59:59.999_999 UTC));
 
-    /// TODO: Docs. (UTC).
+    /// Creates a new `DateTime` with the current date & time in UTC.
     pub fn now() -> Self {
         Self(time::OffsetDateTime::now_utc())
     }
 
-    /// TODO: Docs. (UTC).
+    /// Returns the number of seconds to this `DateTime` since Unix epoch.
     pub fn unix_timestamp(&self) -> i64 {
         self.0.unix_timestamp()
     }
@@ -155,62 +161,92 @@ impl DateTime {
     /// Formats the `DateTime` with the UTC offset.
     pub(crate) fn format(&self, fmt: &[time::format_description::FormatItem<'_>])
     -> Result<String, time::error::Format> {
-        self.0.format(fmt)
+        self.0.to_offset(time::UtcOffset::UTC).format(fmt)
     }
 
     pub(crate) fn _from_time(datetime: time::OffsetDateTime) -> Self {
-        Self(datetime.to_offset(time::UtcOffset::UTC))
+        Self(datetime).min(Self::MAX).max(Self::MIN)
     }
 
-    /// TODO: Docs.
+    /// Creates a new `DateTime` with the same date & time and timezone offset
+    /// as the [`OffsetDateTime`][t], clamped to the range [`MIN`]…[`MAX`]
+    /// (inclusive).
+    ///
+    /// The timezone offset will be preserved (unless clamped), and will be
+    /// included in any [`OffsetDateTime`][t] returned from calling
+    /// [`into_time`] on a `DateTime` created through `from_time`, but is
+    /// otherwise opaque.
+    ///
+    /// [t]: time::OffsetDateTime
     #[cfg(feature = "time")]
+    #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
     pub fn from_time(datetime: time::OffsetDateTime) -> Self {
         Self::_from_time(datetime)
     }
 
-    /// TODO: Docs.
+    /// Returns the [`OffsetDateTime`][t] with the same date & time and
+    /// timezone offset as this `DateTime`,
+    ///
+    /// If this `DateTime` was crated from an [`OffsetDateTime`][t] the
+    /// timezone offset will be preserved (unless it was clamped), otherwise
+    /// it will be UTC.
+    ///
+    /// [t]: time::OffsetDateTime
     #[cfg(feature = "time")]
+    #[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
     pub fn into_time(self) -> time::OffsetDateTime {
-        self.into()
+        self.0
     }
 }
 
 #[cfg(any(test, feature = "time"))]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl From<time::OffsetDateTime> for DateTime {
+    /// See [`DateTime::from_time`].
     fn from(value: time::OffsetDateTime) -> Self {
         Self::_from_time(value)
     }
 }
 
 #[cfg(any(test, feature = "time"))]
+#[cfg_attr(all(nightly, doc), doc(cfg(feature = "time")))]
 impl From<DateTime> for time::OffsetDateTime {
+    /// See [`DateTime::into_time`].
     fn from(value: DateTime) -> Self {
-        value.0
+        value.into_time()
     }
 }
 
 impl std::ops::Add<Duration> for DateTime {
     type Output = DateTime;
+    /// Clamped to [`DateTime::MAX`].
     fn add(self, rhs: Duration) -> Self::Output {
-        Self(self.0 + time::Duration::seconds(rhs.as_secs() as i64))
+        Self(self.0 + time::Duration::seconds(rhs.as_secs() as _))
+            .min(Self::MAX)
     }
 }
 
 impl std::ops::Sub<Duration> for DateTime {
     type Output = DateTime;
+    /// Clamped to [`DateTime::MIN`].
     fn sub(self, rhs: Duration) -> Self::Output {
-        Self(self.0 - time::Duration::seconds(rhs.as_secs() as i64))
+        Self(self.0 - time::Duration::seconds(rhs.as_secs() as _))
+            .max(Self::MIN)
     }
 }
 
 impl std::ops::AddAssign<Duration> for DateTime {
+    /// Clamped to [`DateTime::MAX`].
     fn add_assign(&mut self, rhs: Duration) {
-        self.0.add_assign(time::Duration::seconds(rhs.as_secs() as i64))
+        self.0.add_assign(time::Duration::seconds(rhs.as_secs() as _));
+        if *self > Self::MAX { *self = Self::MAX }
     }
 }
 
 impl std::ops::SubAssign<Duration> for DateTime {
+    /// Clamped to [`DateTime::MIN`].
     fn sub_assign(&mut self, rhs: Duration) {
-        self.0.sub_assign(time::Duration::seconds(rhs.as_secs() as i64))
+        self.0.sub_assign(time::Duration::seconds(rhs.as_secs() as _));
+        if *self < Self::MIN { *self = Self::MIN }
     }
 }
